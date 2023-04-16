@@ -50,16 +50,20 @@ def list_libray():
     print(library)
     return json.dumps({'success': True, 'message': library})
 
+
 @app.route('/libraryinput', methods=['POST'])
 def lib_input():
     id = request.json['id'] if request.json['id'] else None
     sequence = Sequence.query.get(int(id))
-    data = {'id': sequence.id, 'title': sequence.title, 'period': sequence.period, 'input': sequence.input}
-    for state in data["input"]:
-        serialPort.write(bytes(state, 'utf-8'))
-        print(state)
-        sleep(float(data["period"]))
+    data = {'id': sequence.id, 'title': sequence.title,
+            'period': sequence.period, 'input': sequence.input}
+    if mode == 'a':
+        for state in data["input"]:
+            serialPort.write(bytes(state, 'utf-8'))
+            print(state)
+            sleep(float(data["period"]))
     return json.dumps({'sucess': True, 'sequence': data})
+
 
 @app.route('/saveinput', methods=['POST'])
 def save_input():
