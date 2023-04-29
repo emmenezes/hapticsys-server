@@ -79,6 +79,12 @@ def list_libray():
     return json.dumps({'success': True, 'message': library})
 
 
+@app.route('/getinput', methods=['POST'])
+def get_input():
+    id = request.json['id']
+    sequence = Sequence.query.filter_by(id = id).first()
+    return json.dumps({'sucess': True, 'input': sequence.input})
+
 @app.route('/libraryinput', methods=['POST'])
 def lib_input():
     id = request.json['id'] if request.json['id'] else None
