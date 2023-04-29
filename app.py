@@ -6,6 +6,10 @@ import json
 import serial
 
 RST_INPUT = "000000000000"
+FORWARD_MASK = "000100001000"
+BACKWARD_MASK = "000001100000"
+LEFT_MASK = "001000000000"
+RIGHT_MASK = "000000000100"
 
 # mode = 'a'
 mode = 'r'
@@ -40,13 +44,37 @@ class Sequence(db.Model):
         return {c.title: getattr(self, c.title) for c in self.__table__.columns}
 
 
+def get_mask(direction):
+    if (direction == "F"):
+        return FORWARD_MASK
+    if (direction == "B"):
+        return BACKWARD_MASK
+    if (direction == "L"):
+        return LEFT_MASK
+    return RIGHT_MASK
+
+
+def get_level(time):
+    if (time > 5):
+        return 4
+    if (time > 2):
+        return 3
+    return 2
+
+
+def create_monster_input(mask, level):
+    res = ''
+    for e in mask:
+        res += str(int(e)*level)
+    return res
+
 @app.route('/listlibrary')
 def list_libray():
     sequences = Sequence.query.all()
     library = []
     for sequence in sequences:
         library.append(
-            {'id': sequence.id, 'title': sequence.title, 'period': sequence.period, 'input': sequence.input})
+            {'id': sequence.id, 'title': sequence.title})
     print(library)
     return json.dumps({'success': True, 'message': library})
 
@@ -85,6 +113,20 @@ def custom_input():
             serialPort.write(bytes(sequence, 'utf-8'))
             sleep(period)
     return json.dumps({'success': True, "message": f"Input recebido {input}, com periodo {period}"})
+
+
+@app.route('/monsterinput', methods=['POST'])
+def monster_input():
+    time = request.json['intensity']
+    direction = request.json['direction']
+    level = get_level(time)
+    mask = get_mask(direction)
+    sequence = [create_monster_input(mask, level), RST_INPUT]
+    if mode == 'a':
+        for state in sequence:
+            serialPort.write(bytes(state, 'utf-8'))
+            sleep(time/10)
+    return json.dumps({'success': True, "message": f"Sequencia executada {sequence}"})
 
 
 @app.before_first_request
