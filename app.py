@@ -11,8 +11,8 @@ BACKWARD_MASK = "000001100000"
 LEFT_MASK = "001000000000"
 RIGHT_MASK = "000000000100"
 
-# mode = 'a'
-mode = 'r'
+mode = 'a'
+# mode = 'r'
 
 serialPort = ''
 if mode == 'a':
@@ -55,10 +55,8 @@ def get_mask(direction):
 
 
 def get_level(time):
-    if (time > 5):
-        return 4
-    if (time > 2):
-        return 3
+    if (time > 4):
+        return 7
     return 2
 
 
@@ -67,6 +65,7 @@ def create_monster_input(mask, level):
     for e in mask:
         res += str(int(e)*level)
     return res
+
 
 @app.route('/listlibrary')
 def list_libray():
@@ -82,8 +81,9 @@ def list_libray():
 @app.route('/getinput', methods=['POST'])
 def get_input():
     id = request.json['id']
-    sequence = Sequence.query.filter_by(id = id).first()
-    return json.dumps({'sucess': True, 'input': sequence.input})
+    sequence = Sequence.query.filter_by(id=id).first()
+    return json.dumps({'sucess': True, 'input': sequence.input, 'period': sequence.period})
+
 
 @app.route('/libraryinput', methods=['POST'])
 def lib_input():
@@ -96,7 +96,7 @@ def lib_input():
             serialPort.write(bytes(state, 'utf-8'))
             print(state)
             sleep(float(data["period"]))
-    return json.dumps({'sucess': True, 'sequence': data})
+    return json.dumps({'sucess': True, 'message': f'Sequencia {data["title"]} executada'})
 
 
 @app.route('/saveinput', methods=['POST'])
@@ -132,7 +132,7 @@ def monster_input():
         for state in sequence:
             serialPort.write(bytes(state, 'utf-8'))
             sleep(time/10)
-    return json.dumps({'success': True, "message": f"Sequencia executada {sequence}"})
+    return json.dumps({'success': True, "message": f"Sequencia monstro executada"})
 
 
 @app.before_first_request
